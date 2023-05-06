@@ -28,6 +28,7 @@ public class StudentController {
 //    @GetMapping()    //endpoint + http methodları gidecek
 //    public ResponseEntity<Student>
 
+    //Githupa ekledim
 
 
 }
