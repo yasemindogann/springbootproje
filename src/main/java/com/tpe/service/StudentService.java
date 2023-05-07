@@ -1,10 +1,13 @@
 package com.tpe.service;
 
 import com.tpe.domain.Student;
+import com.tpe.exception.ConflictException;
+import com.tpe.exception.ResourceNotFoundException;
 import com.tpe.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.naming.ConfigurationException;
 import java.util.List;
 
 @Service    //Service katmanı olduğunu söylüyorum.
@@ -35,4 +38,64 @@ public class StudentService {
 
         //Artık listeleme methodumu Postman'den test edebilirim.
     }
+
+
+    //Bu methodun dönen değeri yok(void)
+    public void createStudent(Student student) {
+        //Burası Business Logic katı.Herhangi bir kontrol yapmam lazım mı bakıyorum.
+        //Controller'da valid yaptı.Email geçerli mi diye kontrol etti.
+        //Ama şimdi burada Email DB'de var mı diye kontrol etmem lazım.Email unique'dir.
+        //Email DB'de varsa exception fırlatacak.
+        //studentRepository'de "exists" diye bir method var ve bu method türetilebilir.
+        //Biz Email için kullanıcaz.Gireceğim email DB'de kayıtlı olarak var mı diye kontrol yapmak istiyorum.
+        //studentRepository.exists dedik ve methodu "existsByEmail" buna çevirdik.
+        //Parametre olarak kullanıcının kayıt esnasında yazmış olduğu email bilgisini getirmem lazım.
+        if(studentRepository.existsByEmail(student.getEmail())){
+            //Eğer girilen email DB'de varsa exception fırlatmam lazım
+            //Hata mesajını kendim türetmem lazım.
+            //Kaydetmeye çalıştığınız Email zaten kullanılıyor diye bir mesaj göndermem lazım.
+            //throw new diyerek yeni bir exception ürettim.
+            //Java'nın exception'ları var ama ben kendim ConflictException adında yeni bir exception ürettim.
+            //Bu Class exception package'ının içinde yer alıyor.(Detaylı açıklama class içinde)
+            //İçine parametre olarak mesajımı yazdım.
+            throw new ConflictException("Email is already exist!!");
+        }
+        //Else ise burası çalışacak.
+        studentRepository.save(student);
+
+        //Artık create methodumu Postman'den test edebilirim.
+
+    }
+
+
+    public Student getStudentById(Long id) {
+        //Kontrol etmem gereken bir şey var mı?
+        //Evet.Acaba bu id'li öğrenci var mı?
+        //Varsa gönder yoksa exception fırlat
+
+        // return studentRepository.findById(id);
+        //findById() methodu Long data tipinde id alıyor.Dönen değer Optional<Student>
+        //Optional yapılar Java'ya null pointer exception almamak için eklendi.
+        //Optional--> Eğer student varsa gönderirim ama yoksa senin bunu handle edebilmen için
+        //optional(içi boş) bir obje göndercem bunla sen handle et diyor.
+        //Bu yüzden şu şekil yazcaz:
+        return studentRepository.findById(id).orElseThrow(
+                ()->new ResourceNotFoundException("Student not found with id: " + id));
+        //orElseThrow() -> Yoksa exception fırlat
+        //()->new ResourceNotFoundException("Student not found with id: " + id) --> Oluşturduğum exception classını kullanarak hata mesajı gönderdim.
+
+        //Artık methodumu Postman'den test edebilirim.
+
+    }
+
+    //Silmek istediğin id'li öğrenci var mı kontrol et.
+    public void deleteStudent(Long id) {
+        //Yukardaki öğrenci bulan methodu kullan.
+        //Zaten yukardaki "getStudentById(Long id)" methodu istenilen id'li öğrenci var mı diye kontrol ediyor.
+        //Varsa getiriyor yoksa hata mesajı fırlatıyor.
+        //Varsa öğrenciyi alıyoruz ve delete uyguluyoruz.
+        Student student = getStudentById(id);
+        studentRepository.delete(student);
+    }
+
 }
